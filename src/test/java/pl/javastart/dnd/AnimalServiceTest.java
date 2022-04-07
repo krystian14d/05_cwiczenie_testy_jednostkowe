@@ -9,13 +9,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class AnimalServiceTest {
-
-    //skończony film na 11min
 
     @Mock
     private AnimalRepository animalRepository;
@@ -36,30 +36,67 @@ class AnimalServiceTest {
          */
 
 
-        Animal animal = new Animal();
-        animal.setId(1L);
-        animal.setName("Kurczak");
-        animal.setSortOrder(300L);
+        Animal animal1 = new Animal();
+        animal1.setId(1L);
+        animal1.setName("Kurczak");
+        animal1.setSortOrder(300L);
 
-        Mockito.when(animalRepository.findById(1L)).thenReturn(Optional.of(animal));
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
 
         Animal animal2 = new Animal();
         animal2.setId(2L);
         animal2.setName("Krowa");
         animal2.setSortOrder(200L);
 
-        Mockito.when(animalRepository.findById(2L)).thenReturn(Optional.of(animal2));
+        when(animalRepository.findById(2L)).thenReturn(Optional.of(animal2));
+
+        when(animalRepository.findAll()).thenReturn(Arrays.asList(animal1, animal2));
 
         //when
         animalService.move(1L, 0);
 
         //then
 
-        Mockito.verify(animalRepository, Mockito.times(1)).save(animalArgumentCaptor.capture());
+        verify(animalRepository, times(1)).save(animalArgumentCaptor.capture());
         Animal animalSavedToDb = animalArgumentCaptor.getValue();
 
-        Assertions.assertThat(animalSavedToDb.getSortOrder()).isEqualTo(-100L);
+        Assertions.assertThat(animalSavedToDb.getSortOrder()).isEqualTo(100L);
+    }
+
+    @Test
+    public void shouldCalculateForLastPosition() {
+        //given
+        MockitoAnnotations.openMocks(this);
+        /*
+            400 - Krowa
+            300 - Kurczak
+         */
 
 
+        Animal animal1 = new Animal();
+        animal1.setId(1L);
+        animal1.setName("Kurczak");
+        animal1.setSortOrder(300L);
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+
+        Animal animal2 = new Animal();
+        animal2.setId(2L);
+        animal2.setName("Krowa");
+        animal2.setSortOrder(200L);
+
+        when(animalRepository.findById(2L)).thenReturn(Optional.of(animal2));
+
+        when(animalRepository.findAll()).thenReturn(Arrays.asList(animal1, animal2));
+
+        //when
+        animalService.move(1L, 1);
+
+        //then
+
+        verify(animalRepository, times(1)).save(animalArgumentCaptor.capture());
+        Animal animalSavedToDb = animalArgumentCaptor.getValue();
+
+        Assertions.assertThat(animalSavedToDb.getSortOrder()).isEqualTo(400L);
     }
 }

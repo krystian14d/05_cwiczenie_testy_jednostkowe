@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 @Service
 public class AnimalService {
 
+    public static final long SORT_ORDER_STEP = 100L;
     private AnimalRepository animalRepository;
 
     public AnimalService(AnimalRepository animalRepository) {
@@ -24,25 +25,50 @@ public class AnimalService {
 
     void move(Long animalId, int targetPosition) {
 
+        List<Animal> allAnimals = animalRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparing(Animal::getSortOrder))
+                .collect(Collectors.toList());
+
         Animal animal = animalRepository.findById(animalId).get();
-        animal.setSortOrder(-100L);
-        animalRepository.save(animal);
 
-        // TODO uzupełnij tę metodę oraz dodaj do niej testy, żeby sprawdzić czy działa
+        long targetSortOrder = calculateSortOrder(allAnimals);
 
-        // w ten sposób możesz pobrać wszystkie zwierzaki z bazy danych
-        // List<Animal> allAnimals = animalRepository.findAll();
+        if (targetPosition == 0) {
 
-        // w ten sposób pobrac jednego zwierzaka po ID
-        // Animal animal = animalRepository.findById(animalId).orElseThrow();
+            Animal firstAnimalOnList = allAnimals.get(0);
+            animal.setSortOrder(firstAnimalOnList.getSortOrder() - SORT_ORDER_STEP);
+            animalRepository.save(animal);
 
-        // w ten sposób zapisać zmiany dotyczące zwierzaka do bazy
-        // animal.setSortOrder(1000L);
-        // animalRepository.save(animal);
-
-        // w ten sposób zapisać zmiany w całej liście zwierzaków na raz
-        // animalRepository.saveAll(allAnimals);
-
-        // POWODZENIA!
+        } else if (targetPosition == allAnimals.size() - 1) {
+            Animal lastAnimalOnList = allAnimals.get(allAnimals.size() - 1);
+            animal.setSortOrder(lastAnimalOnList.getSortOrder() + SORT_ORDER_STEP);
+            animalRepository.save(animal);
+        } else {
+            throw new RuntimeException("Not implemented");
+        }
     }
+
+    long calculateSortOrder(List<Animal> animalList) {
+
+    }
+
+    // TODO uzupełnij tę metodę oraz dodaj do niej testy, żeby sprawdzić czy działa
+
+    // w ten sposób możesz pobrać wszystkie zwierzaki z bazy danych
+    // List<Animal> allAnimals = animalRepository.findAll();
+
+    // w ten sposób pobrac jednego zwierzaka po ID
+    // Animal animal = animalRepository.findById(animalId).orElseThrow();
+
+    // w ten sposób zapisać zmiany dotyczące zwierzaka do bazy
+    // animal.setSortOrder(1000L);
+    // animalRepository.save(animal);
+
+    // w ten sposób zapisać zmiany w całej liście zwierzaków na raz
+    // animalRepository.saveAll(allAnimals);
+
+    // POWODZENIA!
+
+
 }
