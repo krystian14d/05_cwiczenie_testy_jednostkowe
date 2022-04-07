@@ -32,11 +32,20 @@ public class AnimalService {
 
         Animal animal = animalRepository.findById(animalId).get();
 
-        long targetSortOrder = calculateSortOrder(animal, allAnimals, targetPosition);
-        animal.setSortOrder(targetSortOrder);
-        animalRepository.save(animal);
+        try {
+            long targetSortOrder = calculateSortOrder(animal, allAnimals, targetPosition);
+            animal.setSortOrder(targetSortOrder);
+            animalRepository.save(animal);
+        } catch (SortOrderCalculationNotPossibleException e) {
+            reorderAnimals(allAnimals);
+            animalRepository.saveAll(allAnimals);
+        }
+    }
 
-
+    void reorderAnimals(List<Animal> allAnimals) {
+        for (int i = 0; i < allAnimals.size(); i++) {
+            allAnimals.get(i).setSortOrder((i + 1) * SORT_ORDER_STEP);
+        }
     }
 
     long calculateSortOrder(Animal animal, List<Animal> animalList, int targetPosition) {
@@ -50,7 +59,17 @@ public class AnimalService {
             Animal lastAnimalOnList = animalList.get(animalList.size() - 1);
             return lastAnimalOnList.getSortOrder() + SORT_ORDER_STEP;
         } else {
-            throw new RuntimeException("Not implemented");
+
+            Animal before = animalList.get(targetPosition - 1);
+            Animal after = animalList.get(targetPosition);
+            long targetSortOrder = (before.getSortOrder() + after.getSortOrder()) / 2;
+
+            if (targetSortOrder == before.getSortOrder()) {
+                animalList.add(targetPosition, animal);
+                throw new SortOrderCalculationNotPossibleException();
+            }
+
+            return targetSortOrder;
         }
     }
 
