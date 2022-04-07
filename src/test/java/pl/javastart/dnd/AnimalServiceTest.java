@@ -1,18 +1,17 @@
 package pl.javastart.dnd;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AnimalServiceTest {
@@ -23,80 +22,117 @@ class AnimalServiceTest {
     @InjectMocks
     private AnimalService animalService;
 
-    @Captor
-    ArgumentCaptor<Animal> animalArgumentCaptor;
+    @BeforeEach
+    public void init(){
+        MockitoAnnotations.openMocks(this);
+    }
 
     @Test
     public void shouldCalculateForFirstPosition() {
         //given
-        MockitoAnnotations.openMocks(this);
         /*
             200 - Krowa
             300 - Kurczak
          */
 
+        Animal animal1 = createAnimal(1L, "Krowa", 200L);
+        Animal animal2 = createAnimal(2L, "Kurczak", 300L);
 
-        Animal animal1 = new Animal();
-        animal1.setId(1L);
-        animal1.setName("Kurczak");
-        animal1.setSortOrder(300L);
-
-        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
-
-        Animal animal2 = new Animal();
-        animal2.setId(2L);
-        animal2.setName("Krowa");
-        animal2.setSortOrder(200L);
-
-        when(animalRepository.findById(2L)).thenReturn(Optional.of(animal2));
-
-        when(animalRepository.findAll()).thenReturn(Arrays.asList(animal1, animal2));
+        List<Animal> animalList = new ArrayList<>(Arrays.asList(animal1, animal2));
 
         //when
-        animalService.move(1L, 0);
+        long sortOrder = animalService.calculateSortOrder(animal2, animalList, 0);
 
         //then
+        Assertions.assertThat(sortOrder).isEqualTo(100L);
+    }
 
-        verify(animalRepository, times(1)).save(animalArgumentCaptor.capture());
-        Animal animalSavedToDb = animalArgumentCaptor.getValue();
+    @Test
+    public void shouldCalculateTheSameForFirstPosition() {
+        //given
+        Animal animal1 = createAnimal(1L, "Krowa", 200L);
 
-        Assertions.assertThat(animalSavedToDb.getSortOrder()).isEqualTo(100L);
+        Animal animal2 = createAnimal(2L, "Kurczak", 300L);
+
+        List<Animal> animalList = new ArrayList<>(Arrays.asList(animal1, animal2));
+
+        //when
+        long sortOrder = animalService.calculateSortOrder(animal1, animalList, 0);
+
+        //then
+        Assertions.assertThat(sortOrder).isEqualTo(200L);
     }
 
     @Test
     public void shouldCalculateForLastPosition() {
         //given
-        MockitoAnnotations.openMocks(this);
         /*
             400 - Krowa
             300 - Kurczak
          */
 
+        Animal animal1 = createAnimal(1L, "Krowa", 200L);
 
-        Animal animal1 = new Animal();
-        animal1.setId(1L);
-        animal1.setName("Kurczak");
-        animal1.setSortOrder(300L);
+        Animal animal2 = createAnimal(2L, "Kurczak", 300L);
 
-        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
-
-        Animal animal2 = new Animal();
-        animal2.setId(2L);
-        animal2.setName("Krowa");
-        animal2.setSortOrder(200L);
-
-        when(animalRepository.findById(2L)).thenReturn(Optional.of(animal2));
-
-        when(animalRepository.findAll()).thenReturn(Arrays.asList(animal1, animal2));
+        List<Animal> animalList = new ArrayList<>(Arrays.asList(animal1, animal2));
 
         //when
-        animalService.move(1L, 1);
+        long sortOrder = animalService.calculateSortOrder(animal1, animalList, 1);
 
         //then
-
-        verify(animalRepository, times(1)).save(animalArgumentCaptor.capture());
-        Animal animalSavedToDb = animalArgumentCaptor.getValue();
-
-        Assertions.assertThat(animalSavedToDb.getSortOrder()).isEqualTo(400L);
+        Assertions.assertThat(sortOrder).isEqualTo(400L);
     }
+
+    @Test
+    public void shouldCalculateTheSameSortOrderForLastPosition() {
+        //given
+        /*
+            400 - Krowa
+            300 - Kurczak
+         */
+
+        Animal animal1 = createAnimal(1L, "Krowa", 200L);
+
+        Animal animal2 = createAnimal(2L, "Kurczak", 300L);
+
+        List<Animal> animalList = new ArrayList<>(Arrays.asList(animal1, animal2));
+
+        //when
+        long sortOrder = animalService.calculateSortOrder(animal2, animalList, 1);
+
+        //then
+        Assertions.assertThat(sortOrder).isEqualTo(300L);
+    }
+
+    @Test
+    public void shouldCalculateTheSameSortOrderForLastPosition() {
+        //given
+        /*
+            400 - Krowa
+            300 - Kurczak
+         */
+
+        Animal animal1 = createAnimal(1L, "Krowa", 200L);
+        Animal animal2 = createAnimal(2L, "Kurczak", 300L);
+        Animal animal3 = createAnimal(3L, "Pies", 400L);
+
+        List<Animal> animalList = new ArrayList<>(Arrays.asList(animal1, animal2));
+
+        //when
+        long sortOrder = animalService.calculateSortOrder(animal1, animalList, 1);
+
+        //then
+        Assertions.assertThat(sortOrder).isEqualTo(300L);
+    }
+
+
+    private Animal createAnimal(long id, String name, long sortOrder) {
+        Animal animal1 = new Animal();
+        animal1.setId(id);
+        animal1.setName(name);
+        animal1.setSortOrder(sortOrder);
+        return animal1;
+    }
+
 }
